@@ -1,0 +1,39 @@
+<%- include('../partials/header') %>
+<main class="main auth-main">
+    <section class="auth-card">
+        <div class="auth-heading">
+            <p class="auth-kicker">Welcome back</p>
+            <h1>Login to your account</h1>
+            <p class="auth-subtitle">Access your short links and continue managing your URLs.</p>
+        </div>
+
+        <%- include('../partials/flash') %>
+
+        <form action="/login" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+
+        <div class="auth-divider" role="separator" aria-label="Alternative login option">
+            <span>or</span>
+        </div>
+
+        <a href="/google" class="btn btn-google">Continue with Google</a>
+
+        <p class="auth-switch auth-switch-subtle">
+            <a href="/forgot-password">Forgot password?</a>
+        </p>
+
+        <p class="auth-switch">
+            Don't have an account? <a href="/signup">Register here</a>
+        </p>
+    </section>
+</main>
+<%- include('../partials/footer') %>

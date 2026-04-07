@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle || 'URL Shortener' %></title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="nav-shell">
+            <a href="/" class="logo" aria-label="URLly home">
+                <span class="logo-mark">U</span>
+                <span class="logo-text">URLly</span>
+            </a>
+
+            <nav class="site-nav" aria-label="Main navigation">
+                <% if (user) { %>
+                    <a href="/login/dashboard" class="nav-link <%= activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+                    <a href="/login/profile" class="nav-link <%= activePage === 'profile' ? 'active' : '' %>">Profile</a>
+                    <form action="/logout" method="GET" class="nav-logout-form">
+                        <button type="submit" class="nav-link nav-cta nav-logout-btn">Logout</button>
+                    </form>
+                <% } else { %>
+                    <a href="/" class="nav-link <%= activePage === 'home' ? 'active' : '' %>">Home</a>
+                    <a href="/login" class="nav-link <%= activePage === 'login' ? 'active' : '' %>">Login</a>
+                    <a href="/signup" class="nav-link nav-cta <%= activePage === 'signup' ? 'active' : '' %>">Register</a>
+                <% } %>
+            </nav>
+        </div>
+    </header>

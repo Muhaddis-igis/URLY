@@ -1,0 +1,89 @@
+<%- include('partials/header') %>
+
+<main class="main dashboard-main">
+    <section class="profile-card">
+        <div class="profile-head">
+            <p class="dashboard-kicker">Account</p>
+            <h1>Your Profile</h1>
+            <p class="dashboard-subtitle">Manage your account details and security from one place.</p>
+        </div>
+
+        <% if (flash && ((flash.error && flash.error.length) || (flash.success && flash.success.length))) { %>
+            <div class="dashboard-notice-stack" role="status" aria-live="polite">
+                <% if (flash.error && flash.error.length) { %>
+                    <% flash.error.forEach((message) => { %>
+                        <article class="dashboard-notice dashboard-notice-error" role="alert" aria-live="assertive">
+                            <span class="dashboard-notice-icon" aria-hidden="true">!</span>
+                            <div>
+                                <h2>Profile action failed</h2>
+                                <p><%= message %></p>
+                            </div>
+                        </article>
+                    <% }) %>
+                <% } %>
+
+                <% if (flash.success && flash.success.length) { %>
+                    <% flash.success.forEach((message) => { %>
+                        <article class="dashboard-notice dashboard-notice-success" role="status">
+                            <span class="dashboard-notice-icon" aria-hidden="true">✓</span>
+                            <div>
+                                <h2>Profile updated</h2>
+                                <p><%= message %></p>
+                            </div>
+                        </article>
+                    <% }) %>
+                <% } %>
+            </div>
+        <% } %>
+
+        <div class="profile-layout">
+            <aside class="profile-identity">
+                <img src="<%= profile.avatarUrl %>" alt="<%= profile.name %> profile picture" class="profile-avatar">
+                <h2><%= profile.name %></h2>
+                <p class="profile-email"><%= profile.email %></p>
+                <p class="profile-member">Member since <%= profile.memberSince ? new Date(profile.memberSince).toLocaleDateString() : 'N/A' %></p>
+            </aside>
+
+            <div class="profile-content">
+                <section class="profile-stats">
+                    <article class="profile-stat">
+                        <h3>Total Clicks</h3>
+                        <p><%= profile.totalClicks %></p>
+                    </article>
+                    <article class="profile-stat">
+                        <h3>Last Active</h3>
+                        <p><%= profile.lastActive ? new Date(profile.lastActive).toLocaleString() : 'N/A' %></p>
+                    </article>
+                    <article class="profile-stat">
+                        <h3>Username</h3>
+                        <p><%= profile.name %></p>
+                    </article>
+                    <article class="profile-stat">
+                        <h3>Email</h3>
+                        <p><%= profile.email %></p>
+                    </article>
+                </section>
+
+                <section class="profile-verify">
+                    <div>
+                        <h3>Email Verification</h3>
+                        <p>Status: <strong><%= profile.emailVerified === true ? 'Verified' : 'Not verified' %></strong></p>
+                    </div>
+                    <% if (profile.emailVerified !== true) { %>
+                        <form action="/login/verify-email" method="POST">
+                            <button type="submit" class="btn btn-primary">Verify Now</button>
+                        </form>
+                    <% } %>
+                </section>
+
+                <section class="profile-actions">
+                    <a href="/login/profile/edit" class="btn btn-secondary">Edit Profile</a>
+                    <a href="/login/profile/change-password" class="btn btn-secondary">Change Password</a>
+                    <a href="/logout" class="btn btn-danger">Logout</a>
+                </section>
+            </div>
+        </div>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1775036656053,
+      "tag": "0000_ambiguous_grandmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1775122664338,
+      "tag": "0001_mushy_elektra",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775349000000,
+      "tag": "0002_password_reset_tokens",
+      "breakpoints": true
+    }
+  ]
+}

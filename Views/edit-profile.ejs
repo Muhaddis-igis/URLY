@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+
+<main class="main auth-main">
+    <section class="auth-card">
+        <div class="auth-heading">
+            <p class="auth-kicker">Account</p>
+            <h1>Edit Profile</h1>
+            <p class="auth-subtitle">Update your name below.</p>
+        </div>
+
+        <%- include('partials/flash') %>
+
+        <form action="/login/profile/edit" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Enter changed user name"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update Now</button>
+        </form>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

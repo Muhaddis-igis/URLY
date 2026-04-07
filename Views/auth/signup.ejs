@@ -1,0 +1,33 @@
+<%- include('../partials/header') %>
+<main class="main auth-main">
+    <section class="auth-card">
+        <div class="auth-heading">
+            <p class="auth-kicker">Start for free</p>
+            <h1>Create your account</h1>
+            <p class="auth-subtitle">Join URLly and generate short links with ease.</p>
+        </div>
+
+        <%- include('../partials/flash') %>
+
+        <form action="/signup" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" name="name" id="name" required placeholder="Your full name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required placeholder="Create a strong password">
+            </div>
+            <button type="submit" class="btn btn-primary">Register</button>
+        </form>
+
+        <p class="auth-switch">
+            Already have an account? <a href="/login">Login here</a>
+        </p>
+    </section>
+</main>
+<%- include('../partials/footer') %>

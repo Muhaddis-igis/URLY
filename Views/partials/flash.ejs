@@ -1,0 +1,21 @@
+<% if (flash && ((flash.error && flash.error.length) || (flash.success && flash.success.length))) { %>
+    <div class="flash-stack" role="status" aria-live="polite">
+        <% if (flash.error && flash.error.length) { %>
+            <% flash.error.forEach((message) => { %>
+                <article class="flash-message flash-error" role="alert" aria-live="assertive">
+                    <span class="flash-icon" aria-hidden="true">!</span>
+                    <p><%= message %></p>
+                </article>
+            <% }) %>
+        <% } %>
+
+        <% if (flash.success && flash.success.length) { %>
+            <% flash.success.forEach((message) => { %>
+                <article class="flash-message flash-success" role="status">
+                    <span class="flash-icon" aria-hidden="true">✓</span>
+                    <p><%= message %></p>
+                </article>
+            <% }) %>
+        <% } %>
+    </div>
+<% } %>

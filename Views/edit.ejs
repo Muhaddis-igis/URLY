@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+
+<main class="main dashboard-main">
+    <section class="dashboard-card">
+        <% if (!link) { %>
+            <div class="dashboard-head">
+                <div>
+                    <p class="dashboard-kicker">Edit Link</p>
+                    <h1>Link not found</h1>
+                    <p class="dashboard-subtitle">This short link does not exist or is no longer available.</p>
+                </div>
+            </div>
+            <a href="/login/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        <% } else { %>
+            <div class="dashboard-head">
+                <div>
+                    <p class="dashboard-kicker">Edit Link</p>
+                    <h1>Update Short Link</h1>
+                    <p class="dashboard-subtitle">Change your destination URL or shortcode, then save your updates.</p>
+                </div>
+            </div>
+
+            <% if (flash && ((flash.error && flash.error.length) || (flash.success && flash.success.length))) { %>
+                <div class="dashboard-notice-stack" role="status" aria-live="polite">
+                    <% if (flash.error && flash.error.length) { %>
+                        <% flash.error.forEach((message) => { %>
+                            <article class="dashboard-notice dashboard-notice-error" role="alert" aria-live="assertive">
+                                <span class="dashboard-notice-icon" aria-hidden="true">!</span>
+                                <div>
+                                    <h2>We could not update this short link</h2>
+                                    <p><%= message %></p>
+                                </div>
+                            </article>
+                        <% }) %>
+                    <% } %>
+
+                    <% if (flash.success && flash.success.length) { %>
+                        <% flash.success.forEach((message) => { %>
+                            <article class="dashboard-notice dashboard-notice-success" role="status">
+                                <span class="dashboard-notice-icon" aria-hidden="true">✓</span>
+                                <div>
+                                    <h2>Short link updated</h2>
+                                    <p><%= message %></p>
+                                </div>
+                            </article>
+                        <% }) %>
+                    <% } %>
+                </div>
+            <% } %>
+
+            <form action="/login/dashboard/edit/<%= link.id %>" method="POST" class="dashboard-form">
+                <div class="form-group">
+                    <label for="url">Destination URL</label>
+                    <input
+                        type="url"
+                        name="url"
+                        id="url"
+                        placeholder="https://example.com/article"
+                        value="<%= link.originalUrl %>"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="shortcode">Custom shortcode</label>
+                    <input
+                        type="text"
+                        name="shortcode"
+                        id="shortcode"
+                        placeholder="my-link"
+                        value="<%= link.shortCode %>"
+                        required
+                    >
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+
+            <a href="/login/dashboard" class="btn btn-secondary">Cancel</a>
+        <% } %>
+    </section>
+</main>
+
+<%- include('partials/footer') %>

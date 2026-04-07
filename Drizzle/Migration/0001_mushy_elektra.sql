@@ -1,0 +1,1 @@
+ALTER TABLE `VerifyEmailTokens` MODIFY COLUMN `expires_at` timestamp NOT NULL DEFAULT (now() + interval 1 day);

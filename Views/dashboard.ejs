@@ -1,0 +1,172 @@
+<%- include('partials/header') %>
+
+<main class="main dashboard-main">
+    <section class="dashboard-card">
+        <div class="dashboard-head">
+            <div>
+                <p class="dashboard-kicker">Control Center</p>
+                <h1>Your URL Dashboard</h1>
+                <p class="dashboard-subtitle">Create short links, copy them quickly, and remove old ones in one place.</p>
+            </div>
+            <p class="dashboard-count"><strong id="links-count-value"><%= links.length %></strong> <span id="links-count-label">link<%= links.length === 1 ? '' : 's' %></span></p>
+        </div>
+
+        <form action="/login/dashboard" method="POST" class="dashboard-form">
+            <div class="form-group">
+                <label for="url">Destination URL</label>
+                <input type="url" name="url" id="url" placeholder="https://example.com/article" required>
+            </div>
+            <div class="form-group">
+                <label for="shortcode">Custom shortcode</label>
+                <input type="text" name="shortcode" id="shortcode" placeholder="my-link" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Short Link</button>
+        </form>
+
+        <% if (flash && ((flash.error && flash.error.length) || (flash.success && flash.success.length))) { %>
+            <div class="dashboard-notice-stack" role="status" aria-live="polite">
+                <% if (flash.error && flash.error.length) { %>
+                    <% flash.error.forEach((message) => { %>
+                        <article class="dashboard-notice dashboard-notice-error" role="alert" aria-live="assertive">
+                            <span class="dashboard-notice-icon" aria-hidden="true">!</span>
+                            <div>
+                                <h2>We could not create this short link</h2>
+                                <p><%= message %></p>
+                            </div>
+                        </article>
+                    <% }) %>
+                <% } %>
+
+                <% if (flash.success && flash.success.length) { %>
+                    <% flash.success.forEach((message) => { %>
+                        <article class="dashboard-notice dashboard-notice-success" role="status">
+                            <span class="dashboard-notice-icon" aria-hidden="true">✓</span>
+                            <div>
+                                <h2>Short link created</h2>
+                                <p><%= message %></p>
+                            </div>
+                        </article>
+                    <% }) %>
+                <% } %>
+            </div>
+        <% } %>
+
+        <% if (!links.length) { %>
+            <div class="dashboard-empty" id="dashboard-empty-state">
+                <h2>No links yet</h2>
+                <p>Create your first short link using the form above.</p>
+            </div>
+        <% } else { %>
+            <ul class="dashboard-list" id="dashboard-links-list">
+                <% links.forEach(function(link){ %>
+                    <li class="dashboard-item" id="link-<%= encodeURIComponent(link.shortCode) %>">
+                        <div class="dashboard-item-main">
+                            <a href="/S/<%= link.shortCode %>" target="_blank" rel="noopener noreferrer" class="dashboard-short-link">
+                                <%= baseUrl %>/S/<%= link.shortCode %>
+                            </a>
+                            <p class="dashboard-original"><%= link.originalUrl %></p>
+                        </div>
+                        <div class="dashboard-actions">
+                            <button
+                                type="button"
+                                class="dashboard-icon-btn dashboard-icon-btn-copy"
+                                aria-label="Copy short link"
+                                title="Copy short link"
+                                onclick="copyShortLink('<%= baseUrl %>/S/<%= link.shortCode %>')"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H10V7h9v14z"/>
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                class="dashboard-icon-btn dashboard-icon-btn-edit"
+                                aria-label="Edit short link"
+                                title="Edit short link"
+                                onclick="editLink('<%= link.id %>')"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm2.92 2.33H5v-.92l9.06-9.06.92.92L5.92 19.58zM20.71 7.04a1.003 1.003 0 0 0 0-1.42L18.37 3.29a1.003 1.003 0 0 0-1.42 0L15.13 5.1l3.75 3.75 1.83-1.81z"/>
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                class="dashboard-icon-btn dashboard-icon-btn-delete"
+                                aria-label="Delete short link"
+                                title="Delete short link"
+                                onclick="deleteLink('<%= link.shortCode %>')"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M6 7h12v2H6V7zm2 3h8l-1 10H9L8 10zm3-6h2l1 1h4v2H6V5h4l1-1z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </section>
+</main>
+
+<script>
+    const editEndpointBase = '/login/dashboard/edit/';
+    
+    async function copyShortLink(shortUrl) {
+        try {
+            await navigator.clipboard.writeText(shortUrl);
+        } catch (err) {
+            console.error(err);
+            alert('Could not copy link');
+        }
+    }
+
+    function editLink(linkId) {
+        window.location.assign(`${editEndpointBase}${encodeURIComponent(linkId)}`);
+    }
+
+    async function deleteLink(shortcode) {
+        try {
+            const response = await fetch(`/delete/S/${encodeURIComponent(shortcode)}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                const item = document.getElementById(`link-${encodeURIComponent(shortcode)}`);
+                if (item) {
+                    item.remove();
+                }
+                updateLinksCount();
+            } else {
+                alert('Failed to delete link');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to delete link');
+        }
+    }
+
+    function updateLinksCount() {
+        const linksList = document.getElementById('dashboard-links-list');
+        const countValue = document.getElementById('links-count-value');
+        const countLabel = document.getElementById('links-count-label');
+
+        if (!linksList || !countValue || !countLabel) {
+            return;
+        }
+
+        const count = linksList.querySelectorAll('.dashboard-item').length;
+        countValue.textContent = String(count);
+        countLabel.textContent = count === 1 ? 'link' : 'links';
+
+        if (count === 0 && !document.getElementById('dashboard-empty-state')) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'dashboard-empty';
+            emptyState.id = 'dashboard-empty-state';
+            emptyState.innerHTML = '<h2>No links yet</h2><p>Create your first short link using the form above.</p>';
+            linksList.insertAdjacentElement('afterend', emptyState);
+            linksList.remove();
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>
