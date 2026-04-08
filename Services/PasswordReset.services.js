@@ -7,7 +7,7 @@ import { sendEmail } from '../lib/Send-mail.js'
 export const generatePasswordResetToken = () => crypto.randomBytes(32).toString('hex')
 
 export const generatePasswordResetLink = (token, email) => {
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`
   const url = new URL('/reset-password', baseUrl)
   url.searchParams.set('token', token)
   url.searchParams.set('email', email)

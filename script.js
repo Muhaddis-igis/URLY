@@ -19,7 +19,7 @@ app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(session({
-    secret: process.env.JWT_SECRET,
+    secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
     resave: true,
     saveUninitialized: false
 }))

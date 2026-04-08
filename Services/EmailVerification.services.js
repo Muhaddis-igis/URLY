@@ -30,7 +30,7 @@ export const addVerificationCode = async ({ userId, token }) => {
     }
 };
 export const generateVerificationLink = (token, email) => {
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
     let url = new URL('/login/verify-email-token', baseUrl);
     url.searchParams.append('token', token);
     url.searchParams.append('email', email);

@@ -4,6 +4,9 @@ import { eq } from "drizzle-orm";
 import jwt from 'jsonwebtoken'
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from "../Config/constants.js";
 
+const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+
 export const saveUser = async (name, email, password) => {
   try {
     const result = await db.insert(users).values({ name, email, password }).$returningId();
@@ -47,7 +50,7 @@ export const createSession = async (user, {userAgent, ipAddress}) => {
 export const generateAccessToken = ({userId, email, sessionId,isValidEmail}) => {
   return jwt.sign(
     {userId, email, sessionId, isValidEmail}, 
-    process.env.JWT_SECRET, 
+    ACCESS_TOKEN_SECRET, 
     {expiresIn: Math.floor(ACCESS_TOKEN_EXPIRY / 1000)}
   )
 }
@@ -55,7 +58,7 @@ export const generateAccessToken = ({userId, email, sessionId,isValidEmail}) => 
 export const generateRefreshToken = (sessionId) => {
   return jwt.sign(
     {sessionId}, 
-    process.env.JWT_SECRET, 
+    REFRESH_TOKEN_SECRET, 
     {expiresIn: Math.floor(REFRESH_TOKEN_EXPIRY / 1000)}
   )
 }
@@ -166,6 +169,7 @@ export const AcessDashboard = async (req, res) => {
   
 }
 
-export const verifytoken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET)
+export const verifytoken = (token, tokenType = 'access') => {
+  const secret = tokenType === 'refresh' ? REFRESH_TOKEN_SECRET : ACCESS_TOKEN_SECRET;
+  return jwt.verify(token, secret)
 }

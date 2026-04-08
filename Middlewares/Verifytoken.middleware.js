@@ -29,7 +29,7 @@ export const VerifyAuthentication = async (req, res, next) => {
     }
     if(accessToken&&refreshToken){
         try {
-            const decoded =  verifytoken(accessToken)
+            const decoded =  verifytoken(accessToken, 'access')
             // console.log("Decoded Access Token:", decoded)
             // console.log("Decoded Refresh Token:", refreshDecoded)
             req.user = decoded
@@ -42,7 +42,7 @@ export const VerifyAuthentication = async (req, res, next) => {
     }
     if(!accessToken&&refreshToken){
         try{
-            const sessionID  =  verifytoken(refreshToken).sessionId
+            const sessionID  =  verifytoken(refreshToken, 'refresh').sessionId
             const userSessionData = await getUserWithSessionBySessionId(sessionID)
             if (!userSessionData) {
                 req.user = null
