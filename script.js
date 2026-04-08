@@ -15,7 +15,7 @@ const app = express()
 const port = process.env.PORT || 3000
 
 dotenv.config()
-app.use(express.static('public'))
+app.use(express.static('Public'))
 app.set('views', './Views');
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }))
