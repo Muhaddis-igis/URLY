@@ -10,7 +10,8 @@ import {
 	getResetPasswordPage,
 	postResetPasswordHandler,
 	googleOAuthStartHandler,
-	googleOAuthCallbackHandler
+	googleOAuthCallbackHandler,
+	verifyEmailTokenHandler
 } from '../Controllers/Auth.controller.js'
 import {
 	validateLoginInput,
@@ -26,6 +27,7 @@ Router.get('/logout', logoutHandler)
 Router.route('/forgot-password').get(getForgotPasswordPage).post(validateForgotPasswordInput, postForgotPasswordHandler)
 Router.route('/login/forgot-password').get(getForgotPasswordPage).post(validateForgotPasswordInput, postForgotPasswordHandler)
 Router.route('/reset-password').get(getResetPasswordPage).post(validateResetPasswordInput, postResetPasswordHandler)
+Router.get('/verify-email/:token', verifyEmailTokenHandler)
 Router.get('/google', googleOAuthStartHandler)
 Router.get('/google/callback', googleOAuthCallbackHandler)
 const authRouter = Router

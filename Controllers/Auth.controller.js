@@ -1,10 +1,11 @@
 ﻿import {
     deleteSession,
-    saveUser,
     existsUser,
     issueAuthTokensForUser,
     setAuthCookies,
-    markEmailAsVerified
+    markEmailAsVerified,
+    createUnverifiedUserAndEnqueueVerification,
+    verifyEmailTokenAndConsume
 } from '../Services/Auth.services.js'
 import argon2 from 'argon2'
 import zxcvbn from 'zxcvbn'
@@ -72,11 +73,16 @@ export const postloginHandler = async (req, res) => {
         return res.redirect('/login')
     }
 
+    if (!Boolean(isuser.isEmailValid)) {
+        req.flash('error', 'Verify your email first')
+        return res.redirect('/login')
+    }
+
     const { accessToken, refreshToken } = await issueAuthTokensForUser(isuser, {
         userAgent: req.headers['user-agent'] || '',
         ipAddress: req.ip || ''
     })
-
+    
     setAuthCookies(res, { accessToken, refreshToken })
     return res.redirect('/login/dashboard')
 }
@@ -84,26 +90,52 @@ export const postloginHandler = async (req, res) => {
 export const postsignupHandler = async (req, res) => {
     const { name, email, password } = req.body
 
-    const user = await existsUser(email)
-    if (user) {
-        req.flash('error', 'User already exists')
+    try {
+        const user = await existsUser(email)
+        if (user) {
+            req.flash('error', 'User already exists')
+            return res.redirect('/signup')
+        }
+
+        const hashedPassword = await argon2.hash(password)
+        await createUnverifiedUserAndEnqueueVerification({
+            name,
+            email,
+            password: hashedPassword
+        })
+
+        req.flash('success', 'Account created. Please verify your email first, then login.')
+        return res.redirect('/login')
+    } catch (err) {
+        console.error('Error during signup:', err)
+        req.flash('error', 'Could not complete signup right now. Please try again.')
         return res.redirect('/signup')
     }
+}
 
-    const hashedPassword = await argon2.hash(password)
-    const createdUsers = await saveUser(name, email, hashedPassword)
-    const createdUser = {
-        id: createdUsers[0].id,
-        email,
-        isEmailValid: 0
+export const verifyEmailTokenHandler = async (req, res) => {
+    const token = String(req.params.token || '').trim()
+
+    if (!token) {
+        req.flash('error', 'Invalid or expired verification link')
+        return res.redirect('/login')
     }
-    const { accessToken, refreshToken } = await issueAuthTokensForUser(createdUser, {
-        userAgent: req.headers['user-agent'] || '',
-        ipAddress: req.ip || ''
-    })
 
-    setAuthCookies(res, { accessToken, refreshToken })
-    return res.redirect('/login/dashboard')
+    try {
+        const result = await verifyEmailTokenAndConsume({ token })
+
+        if (!result.verified) {
+            req.flash('error', 'Invalid or expired verification link')
+            return res.redirect('/login')
+        }
+
+        req.flash('success', 'Email verified successfully. You can now login.')
+        return res.redirect('/login')
+    } catch (err) {
+        console.error('Error verifying email token:', err)
+        req.flash('error', 'Something went wrong while verifying your email')
+        return res.redirect('/login')
+    }
 }
 
 export const logoutHandler = async (req, res) => {

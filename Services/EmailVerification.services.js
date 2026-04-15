@@ -8,7 +8,7 @@ import crypto from 'crypto'
 
 
 
-export const generateVerificationCode = (digit = 8) => {
+export const generateEmailVerificationCode = (digit = 8) => {
     const min = 10 ** (digit - 1);
     const max = 10 ** digit - 1;
     return crypto.randomInt(min, max);
@@ -110,7 +110,7 @@ export const SendVerificationEmail = async ({ userId, email }) => {
     if (verification) {
         return res.redirect('/login/verify-email')
     }
-    const verificationCode = generateVerificationCode()
+    const verificationCode = generateEmailVerificationCode();
     await addVerificationCode({ userId: userId, token: verificationCode });
     const verifyLink = generateVerificationLink(verificationCode, email)
     sendEmail({ to: email, subject: 'Verify your email for URLly', html: `<h1>Verify Your Email</h1><p>Please click the link below to verify your email address: and your refresh token is ${verificationCode}</p><a href="${verifyLink}">Verify Email</a>` })

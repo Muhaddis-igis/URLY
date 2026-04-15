@@ -10,11 +10,13 @@
     "dev": "nodemon script.js",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
-    "studio": "drizzle-kit studio"
+    "studio": "drizzle-kit studio",
+    "worker": "node Workers/index.js"
   },
   "dependencies": {
     "arctic": "^3.7.0",
     "argon2": "^0.44.0",
+    "bullmq": "^5.74.1",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.3.1",
@@ -22,6 +24,7 @@
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.20.0",
     "nodemailer": "^8.0.4",

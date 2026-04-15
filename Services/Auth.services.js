@@ -1,11 +1,14 @@
 ﻿import { db } from "../Config/db.js";
-import { users, sessions } from "../Drizzle/schema.js";
-import { eq } from "drizzle-orm";
+import { users, sessions, verifyEmailTokens } from "../Drizzle/schema.js";
+import { and, eq, lt, sql } from "drizzle-orm";
 import jwt from 'jsonwebtoken'
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY } from "../Config/constants.js";
+import crypto from 'crypto'
+import { enqueueVerificationEmailJob } from '../queues/email.queue.js'
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+const EMAIL_VERIFICATION_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 export const saveUser = async (name, email, password) => {
   try {
@@ -173,3 +176,82 @@ export const verifytoken = (token, tokenType = 'access') => {
   const secret = tokenType === 'refresh' ? REFRESH_TOKEN_SECRET : ACCESS_TOKEN_SECRET;
   return jwt.verify(token, secret)
 }
+
+export const generateEmailVerificationToken = () => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+export const createEmailVerificationTokenForUser = async ({ userId }) => {
+  const token = generateEmailVerificationToken();
+  const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS);
+
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(verifyEmailTokens)
+      .where(eq(verifyEmailTokens.userId, userId));
+
+    await tx.insert(verifyEmailTokens).values({
+      userId,
+      token,
+      expiresAt,
+    });
+  });
+
+  return token;
+};
+
+export const createUnverifiedUserAndEnqueueVerification = async ({ name, email, password }) => {
+  const createdUsers = await saveUser(name, email, password);
+  const userId = createdUsers[0].id;
+  const token = await createEmailVerificationTokenForUser({ userId });
+
+  await enqueueVerificationEmailJob({ email, token });
+
+  return {
+    userId,
+    token,
+  };
+};
+
+export const verifyEmailTokenAndConsume = async ({ token }) => {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(verifyEmailTokens)
+      .where(lt(verifyEmailTokens.expiresAt, sql`CURRENT_TIMESTAMP()`));
+
+    const [verificationToken] = await tx
+      .select({
+        id: verifyEmailTokens.id,
+        userId: verifyEmailTokens.userId,
+        expiresAt: verifyEmailTokens.expiresAt,
+      })
+      .from(verifyEmailTokens)
+      .where(eq(verifyEmailTokens.token, token))
+      .limit(1);
+
+    if (!verificationToken) {
+      return { verified: false };
+    }
+
+    if (new Date(verificationToken.expiresAt) < new Date()) {
+      await tx
+        .delete(verifyEmailTokens)
+        .where(eq(verifyEmailTokens.id, verificationToken.id));
+      return { verified: false };
+    }
+
+    await tx
+      .update(users)
+      .set({ isEmailValid: 1 })
+      .where(eq(users.id, verificationToken.userId));
+
+    await tx
+      .delete(verifyEmailTokens)
+      .where(and(eq(verifyEmailTokens.userId, verificationToken.userId), eq(verifyEmailTokens.token, token)));
+
+    return {
+      verified: true,
+      userId: verificationToken.userId,
+    };
+  });
+};
