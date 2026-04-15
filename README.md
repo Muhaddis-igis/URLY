@@ -8,7 +8,7 @@ This project provides:
 - User authentication (email/password + Google OAuth)
 - Session-backed JWT authentication with access/refresh cookies
 - URL shortening with custom shortcodes
-- Email verification
+- Async email verification with BullMQ + Redis worker
 - Password reset flow
 - User profile management
 
@@ -20,6 +20,7 @@ Stack:
 - Database: MySQL
 - Validation: Zod
 - Auth & Security: argon2, jsonwebtoken, express-session, cookie-parser
+- Queue/Workers: BullMQ, ioredis, Redis (Memurai)
 - Mail: Resend (with a fallback nodemailer utility in repository)
 
 ## Project Structure
@@ -32,6 +33,9 @@ Stack:
 - `Drizzle/Migration/`: SQL migrations
 - `Validator/`: request validation with Zod
 - `Middlewares/Verifytoken.middleware.js`: auth extraction and token refresh behavior
+- `Queues/email.queue.js`: BullMQ producer for verification emails
+- `Workers/Email.worker.js`: queue consumer that sends verification emails
+- `Workers/index.js`: worker process bootstrap
 - `Views/`: EJS templates
 - `Public/`: static CSS assets
 
@@ -50,6 +54,15 @@ Stack:
 - Refresh token stores `sessionId` only.
 - Sessions are persisted in DB (`Sessions` table).
 - If only refresh token exists and is valid, middleware issues a new access token.
+- Signup does not auto-login users; users must verify email first.
+- Login is blocked when `is_email_valid = false`.
+
+### Email verification pipeline
+- Token generation happens in service layer (`crypto.randomBytes`).
+- Token is stored in DB (`VerifyEmailTokens`) with 1-hour expiry.
+- A BullMQ job is pushed to `email-queue` with job name `send-verification-email`.
+- Worker sends the email side effect only (no token generation in worker).
+- Verification endpoint consumes token and marks user email as verified.
 
 ### Data model (high-level)
 Main tables in `Drizzle/schema.js`:
@@ -99,10 +112,17 @@ npm run generate
 npm run migrate
 ```
 
-## 4) Start development server
+## 4) Start Redis (Memurai)
+
+Make sure Redis is running locally on:
+- Host: `127.0.0.1`
+- Port: `6379`
+
+## 5) Start app and worker
 
 ```bash
 npm run dev
+npm run worker
 ```
 
 Server default: `http://localhost:3000`
@@ -111,6 +131,7 @@ Server default: `http://localhost:3000`
 
 From `package.json`:
 - `npm run dev` -> run app with nodemon
+- `npm run worker` -> start BullMQ email worker
 - `npm run generate` -> generate Drizzle migration files
 - `npm run migrate` -> run DB migrations
 - `npm run studio` -> launch Drizzle Studio
@@ -144,11 +165,7 @@ From `package.json`:
 - `GET /S/:shortcode` -> redirect to original URL
 
 ### Email verification
-- `GET /login/verify-email`
-- `POST /login/verify-email`
-- `GET /login/verify-email-token?token=...&email=...`
-- `POST /login/verify-email-token`
-- `GET /login/verify-email/resend`
+- `GET /verify-email/:token` -> verifies email token and activates account
 
 ### Profile
 - `GET /login/profile`
@@ -206,6 +223,8 @@ Patterns:
 ### Email links not working
 - Check `BASE_URL` and mail provider API key.
 - Verify resend sender domain/address.
+- Ensure worker is running with `npm run worker`.
+- Ensure Redis/Memurai is available on `127.0.0.1:6379`.
 
 ## License
 
