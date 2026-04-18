@@ -3,8 +3,8 @@ import IORedis from 'ioredis'
 import { sendEmail } from '../lib/Send-mail.js'
 
 const redisConnection = new IORedis({
-  host: '127.0.0.1',
-  port: 6379,
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  port: process.env.REDIS_PORT || 6379,
   maxRetriesPerRequest: null,
 })
 
